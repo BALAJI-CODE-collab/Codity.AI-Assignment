@@ -5,6 +5,7 @@
   "scripts": {
     "start": "tsx src/server.ts",
     "migrate": "tsx src/db/migrate.ts",
+    "worker": "tsx src/workers/worker.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

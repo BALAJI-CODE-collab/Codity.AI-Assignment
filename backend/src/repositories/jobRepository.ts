@@ -51,6 +51,104 @@ export async function updateJobStatus(jobId: string, status: JobStatus, workerId
   return result.rows[0] ?? null;
 }
 
+export async function transitionJobToRunning(jobId: string, workerId: string) {
+  const result = await pool.query(
+    `UPDATE jobs
+     SET status = 'running', worker_id = $1, attempts = attempts + 1, updated_at = NOW()
+     WHERE id = $2 AND status = 'claimed'
+     RETURNING id, queue_id, worker_id, type, payload, status, priority, run_at, attempts, max_attempts, batch_id, created_at, updated_at`,
+    [workerId, jobId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function createJobExecution(jobId: string, workerId: string) {
+  const result = await pool.query(
+    `INSERT INTO job_executions (job_id, worker_id, started_at, status)
+     VALUES ($1, $2, NOW(), 'running')
+     RETURNING id, job_id, worker_id, started_at, finished_at, status, error_message, duration_ms`,
+    [jobId, workerId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function finalizeJobExecution(executionId: string, status: 'completed' | 'failed', durationMs: number, errorMessage: string | null) {
+  const result = await pool.query(
+    `UPDATE job_executions
+     SET finished_at = NOW(), status = $1, duration_ms = $2, error_message = $3
+     WHERE id = $4
+     RETURNING id, job_id, worker_id, started_at, finished_at, status, error_message, duration_ms`,
+    [status, durationMs, errorMessage, executionId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function finalizeJobOutcome(jobId: string, status: JobStatus) {
+  const result = await pool.query(
+    `UPDATE jobs
+     SET status = $1, updated_at = NOW()
+     WHERE id = $2
+     RETURNING id, queue_id, worker_id, type, payload, status, priority, run_at, attempts, max_attempts, batch_id, created_at, updated_at`,
+    [status, jobId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function claimNextJob(workerId: string) {
+  const result = await pool.query(
+    `WITH next_job AS (
+        SELECT jobs.id
+        FROM jobs
+        WHERE jobs.status = 'queued'
+          AND jobs.run_at <= NOW()
+        ORDER BY jobs.priority DESC, jobs.run_at ASC, jobs.created_at ASC
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE jobs
+      SET
+        status = 'claimed',
+        worker_id = $1,
+        updated_at = NOW()
+      FROM next_job
+      WHERE jobs.id = next_job.id
+      RETURNING
+        jobs.id,
+        jobs.queue_id,
+        jobs.worker_id,
+        jobs.type,
+        jobs.payload,
+        jobs.status,
+        jobs.priority,
+        jobs.run_at,
+        jobs.attempts,
+        jobs.max_attempts,
+        jobs.batch_id,
+        jobs.created_at,
+        jobs.updated_at`,
+    [workerId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function createWorker(hostname: string) {
+  const result = await pool.query(
+    `INSERT INTO workers (hostname, status, started_at, last_seen_at)
+     VALUES ($1, 'idle', NOW(), NOW())
+     RETURNING id, hostname, status, started_at, last_seen_at`,
+    [hostname]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function updateWorkerStatus(workerId: string, status: 'idle' | 'busy' | 'dead') {
+  const result = await pool.query(
+    `UPDATE workers SET status = $1, last_seen_at = NOW() WHERE id = $2 RETURNING id, hostname, status, started_at, last_seen_at`,
+    [status, workerId]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function createJobInTransaction(client: PoolClient, input: {
   queueId: string;
   type: JobType;
