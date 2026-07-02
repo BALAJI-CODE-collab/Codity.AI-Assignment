@@ -12,19 +12,19 @@ export async function getHealthSnapshot() {
 export async function getMetricsOverview() {
   const result = await pool.query(`
     SELECT
-      (SELECT COUNT(*) FROM jobs) AS total_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'queued') AS queued_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'claimed') AS claimed_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'running') AS running_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'completed') AS completed_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'failed') AS failed_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE status = 'dead_letter') AS dead_letter_jobs,
-      (SELECT COUNT(*) FROM scheduled_jobs) AS scheduled_jobs,
-      (SELECT COUNT(*) FROM workers WHERE status = 'idle' OR status = 'busy') AS active_workers,
-      (SELECT COUNT(*) FROM workers WHERE status = 'dead') AS dead_workers,
-      (SELECT COUNT(*) FROM organizations) AS organizations,
-      (SELECT COUNT(*) FROM projects) AS projects,
-      (SELECT COUNT(*) FROM queues) AS queues
+      (SELECT COUNT(*)::INTEGER FROM jobs) AS total_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'queued') AS queued_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'claimed') AS claimed_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'running') AS running_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'completed') AS completed_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'failed') AS failed_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE status = 'dead_letter') AS dead_letter_jobs,
+      (SELECT COUNT(*)::INTEGER FROM scheduled_jobs) AS scheduled_jobs,
+      (SELECT COUNT(*)::INTEGER FROM workers WHERE status = 'idle' OR status = 'busy') AS active_workers,
+      (SELECT COUNT(*)::INTEGER FROM workers WHERE status = 'dead') AS dead_workers,
+      (SELECT COUNT(*)::INTEGER FROM organizations) AS organizations,
+      (SELECT COUNT(*)::INTEGER FROM projects) AS projects,
+      (SELECT COUNT(*)::INTEGER FROM queues) AS queues
   `);
   return result.rows[0];
 }
@@ -34,11 +34,11 @@ export async function getQueueStats(queueId: string) {
     SELECT
       queues.id AS queue_id,
       queues.name AS queue_name,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'queued') AS queued_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'running') AS running_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'completed') AS completed_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'failed') AS failed_jobs,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'dead_letter') AS dead_letter_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'queued') AS queued_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'running') AS running_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'completed') AS completed_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'failed') AS failed_jobs,
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.queue_id = queues.id AND jobs.status = 'dead_letter') AS dead_letter_jobs,
       (SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (job_executions.finished_at - job_executions.started_at)) * 1000), 0)
        FROM job_executions
        JOIN jobs ON jobs.id = job_executions.job_id
@@ -59,7 +59,7 @@ export async function getWorkersOverview() {
       workers.status,
       workers.started_at,
       workers.last_seen_at,
-      (SELECT COUNT(*) FROM jobs WHERE jobs.worker_id = workers.id AND jobs.status = 'running') AS current_running_jobs
+      (SELECT COUNT(*)::INTEGER FROM jobs WHERE jobs.worker_id = workers.id AND jobs.status = 'running') AS current_running_jobs
     FROM workers
     ORDER BY workers.started_at DESC
   `);

@@ -18,6 +18,14 @@ export async function findQueueById(queueId: string) {
   return result.rows[0] ?? null;
 }
 
+export async function findQueuesByProjectId(projectId: string) {
+  const result = await pool.query(
+    'SELECT id, project_id, name, priority, max_concurrency, retry_policy_id, is_paused, created_at FROM queues WHERE project_id = $1 ORDER BY created_at ASC, name ASC',
+    [projectId]
+  );
+  return result.rows;
+}
+
 export async function updateQueue(queueId: string, updates: Record<string, unknown>) {
   const entries = Object.entries(updates);
   if (!entries.length) {

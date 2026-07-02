@@ -1,8 +1,8 @@
 import { AppError } from '../types/errors';
-import { createQueue, findQueueById, updateQueue } from '../repositories/queueRepository';
+import { createQueue, findQueueById, findQueuesByProjectId, updateQueue } from '../repositories/queueRepository';
 import { pool } from '../repositories/db';
 
-export async function createQueueForProject(userId: string, projectId: string, name: string, priority: number, maxConcurrency: number, retryPolicyId: string | null, isPaused: boolean) {
+async function assertProjectAccess(userId: string, projectId: string) {
   const authorization = await pool.query(
     `SELECT p.org_id
      FROM projects p
@@ -18,8 +18,16 @@ export async function createQueueForProject(userId: string, projectId: string, n
     }
     throw new AppError(403, 'forbidden', 'User is not a member of the organization');
   }
+}
 
+export async function createQueueForProject(userId: string, projectId: string, name: string, priority: number, maxConcurrency: number, retryPolicyId: string | null, isPaused: boolean) {
+  await assertProjectAccess(userId, projectId);
   return createQueue(projectId, name, priority, maxConcurrency, retryPolicyId, isPaused);
+}
+
+export async function listQueuesForProject(userId: string, projectId: string) {
+  await assertProjectAccess(userId, projectId);
+  return findQueuesByProjectId(projectId);
 }
 
 export async function getQueue(userId: string, queueId: string) {

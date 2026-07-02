@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { login, register, listOrganizations } from '../controllers/authController';
 import { createProject, listProjects } from '../controllers/projectController';
-import { createQueue, getQueueById, patchQueue } from '../controllers/queueController';
+import { createQueue, getQueueById, listQueues, patchQueue } from '../controllers/queueController';
 import { createJob, getJobById, listJobs, retryJobById } from '../controllers/jobController';
 import {
   getWorkerDetailsHandler,
@@ -29,6 +29,7 @@ router.post('/organizations', authenticateToken, createOrganization);
 router.post('/projects', authenticateToken, createProject);
 router.get('/projects', authenticateToken, listProjects);
 
+router.get('/projects/:id/queues', authenticateToken, listQueues);
 router.post('/projects/:id/queues', authenticateToken, createQueue);
 router.get('/queues/:id', authenticateToken, getQueueById);
 router.patch('/queues/:id', authenticateToken, patchQueue);

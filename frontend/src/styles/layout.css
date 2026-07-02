@@ -1,0 +1,108 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(4, 7, 15, 0.98), rgba(7, 10, 18, 0.97));
+  position: relative;
+}
+
+.app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 0%, rgba(0, 208, 255, 0.16), transparent 34%), radial-gradient(circle at 85% 12%, rgba(74, 98, 255, 0.14), transparent 28%), radial-gradient(circle at 50% 100%, rgba(132, 92, 255, 0.14), transparent 28%);
+  animation: drift 18s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+.main-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.main-content {
+  padding: 28px 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeUp 260ms ease-out both;
+}
+
+.page-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.page-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.page-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.page-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 24px 26px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(7, 13, 24, 0.98), rgba(10, 15, 25, 0.92));
+  border: 1px solid rgba(0, 208, 255, 0.16);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255,255,255,0.03);
+  backdrop-filter: blur(20px);
+}
+
+.hero-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #4ae6ff;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: 1.55rem;
+  color: #f5f7ff;
+  font-weight: 700;
+}
+
+.hero-copy {
+  margin: 6px 0 0;
+  color: #96a2b8;
+  max-width: 760px;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hero-chip {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #dfe7f7;
+  font-size: 0.82rem;
+}

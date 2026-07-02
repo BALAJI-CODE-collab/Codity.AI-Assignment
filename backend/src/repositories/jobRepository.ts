@@ -202,6 +202,7 @@ export async function handleJobFailureWithRetry(jobId: string, queueId: string, 
 
     const job = jobResult.rows[0];
     const retryPolicy = policyResult.rows[0];
+    const hasRetryPolicy = Boolean(retryPolicy?.strategy);
 
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
@@ -210,7 +211,7 @@ export async function handleJobFailureWithRetry(jobId: string, queueId: string, 
     const attempts = Number(job.attempts ?? 0);
     const maxAttempts = Number(job.max_attempts ?? 1);
 
-    if (retryPolicy && attempts < maxAttempts) {
+    if (hasRetryPolicy && attempts < maxAttempts) {
       const baseDelayMs = Number(retryPolicy.base_delay_ms ?? 0);
       const maxDelayMs = Number(retryPolicy.max_delay_ms ?? baseDelayMs);
       const strategy = retryPolicy.strategy as 'fixed' | 'linear' | 'exponential';

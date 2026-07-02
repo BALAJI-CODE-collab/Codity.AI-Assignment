@@ -1,0 +1,304 @@
+:root {
+  background: #0a0a0a;
+}
+
+body, html, #root {
+  background: #0a0a0a;
+}
+
+body::before,
+body::after {
+  display: none;
+}
+
+.page-heading,
+.page-subtitle,
+.card-header h3,
+.card-subtitle,
+.header-status,
+.header-user-name,
+.header-user-role,
+.metric-label,
+.metric-value,
+.metric-detail,
+.table th,
+.table td,
+.status-badge,
+.pipeline-node-label,
+.pipeline-node-count,
+.pipeline-title,
+.pipeline-subtitle,
+.pipeline-badge,
+.terminal-log-line {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.page-heading {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1.35rem;
+}
+
+.page-subtitle {
+  color: #8b95a7;
+  font-size: 0.92rem;
+  margin-top: 6px;
+}
+
+.card {
+  border-radius: 6px;
+  box-shadow: none;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(10, 10, 10, 0.96);
+}
+
+.metric-card,
+.queue-card,
+.worker-card,
+.table-shell,
+.pipeline-svg,
+.form-grid,
+.auth-card,
+.page-hero,
+.header,
+.card-header {
+  border-radius: 6px;
+}
+
+.metric-card {
+  background: #0f131a;
+  border-color: rgba(255,255,255,0.08);
+}
+
+.metric-label,
+.metric-detail,
+.card-subtitle,
+.page-subtitle,
+.header-user-role,
+.status-badge {
+  color: #8b95a7;
+}
+
+.metric-value {
+  font-size: 2rem;
+  color: #f8fafc;
+}
+
+.button,
+.input,
+.select,
+.textarea {
+  border-radius: 6px;
+}
+
+.button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f8fafc;
+}
+
+.button-primary {
+  background: rgba(0, 208, 255, 0.12);
+  color: #c6f7ff;
+  border-color: rgba(0, 208, 255, 0.25);
+}
+
+.button-secondary {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.button:hover {
+  box-shadow: 0 0 0 1px rgba(0, 208, 255, 0.14);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.status-queued { color: #fbbf24; border-color: rgba(251, 191, 36, 0.22); }
+.status-scheduled { color: #94a3b8; border-color: rgba(148, 163, 184, 0.22); }
+.status-claimed { color: #f97316; border-color: rgba(249, 115, 22, 0.22); }
+.status-running { color: #38bdf8; border-color: rgba(56, 189, 248, 0.22); }
+.status-completed { color: #34d399; border-color: rgba(52, 211, 153, 0.22); }
+.status-failed { color: #ef4444; border-color: rgba(239, 68, 68, 0.22); }
+.status-dead-letter { color: #c084fc; border-color: rgba(192, 132, 252, 0.22); }
+.status-idle { color: #94a3b8; border-color: rgba(148, 163, 184, 0.22); }
+.status-busy { color: #5eead4; border-color: rgba(94, 234, 212, 0.22); }
+.status-dead { color: #ef4444; border-color: rgba(239, 68, 68, 0.22); }
+.status-default { color: #94a3b8; border-color: rgba(148, 163, 184, 0.22); }
+
+.table-shell {
+  border-radius: 6px;
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(7, 9, 13, 0.95);
+}
+
+.table thead {
+  background: rgba(10, 12, 16, 0.95);
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: #e2e8f0;
+}
+
+.table tbody tr:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+.header {
+  background: transparent;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 18px;
+}
+
+.header-user,
+.header-status {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.header-status {
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.page-hero {
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+}
+
+.page-hero .hero-eyebrow,
+.hero-chip {
+  letter-spacing: 0.12em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.page-hero .hero-eyebrow {
+  color: #8b95a7;
+}
+
+.page-hero .hero-chip {
+  color: #cbd5e1;
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.metric-card .metric-value,
+.pipeline-node-label,
+.pipeline-node-count,
+.terminal-log-line {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.pipeline-shell {
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.pipeline-node {
+  stroke-width: 1.2;
+}
+
+.pipeline-node-label {
+  fill: #f8fafc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pipeline-node-count {
+  fill: #94a3b8;
+  font-size: 12px;
+}
+
+.terminal-log-shell {
+  background: rgba(6, 6, 6, 0.98);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.terminal-log-line {
+  display: block;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.terminal-log-line::before {
+  content: '> ';
+  color: #38bdf8;
+}
+
+.system-panel-header {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  color: #8b95a7;
+  margin-bottom: 10px;
+}
+
+.system-panel-header::before {
+  content: 'SYSTEM // ';
+  color: #38bdf8;
+}
+
+.system-dashboard-card {
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10, 10, 10, 0.9);
+}
+
+.system-stat-block {
+  background: rgba(8, 8, 10, 0.95);
+  border-left: 4px solid rgba(56, 189, 248, 0.8);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 16px;
+  min-height: 120px;
+}
+
+.system-stat-block.status-failed {
+  border-left-color: rgba(239, 68, 68, 0.85);
+}
+
+.system-stat-block.status-completed {
+  border-left-color: rgba(34, 197, 94, 0.85);
+}
+
+.system-stat-block.status-running {
+  border-left-color: rgba(56, 189, 248, 0.85);
+}
+
+.system-stat-block .metric-value {
+  font-size: 2rem;
+}
+
+.system-stat-block .metric-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.system-stat-block .metric-detail {
+  color: #8b95a7;
+}

@@ -1,0 +1,67 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3f4f6; color: #111827; }
+button, input, select { font: inherit; }
+a { color: inherit; text-decoration: none; }
+
+.app-shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.sidebar { background: #111827; color: #f9fafb; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+.sidebar h1 { font-size: 1rem; margin: 0 0 8px; }
+.nav-link { padding: 10px 12px; border-radius: 8px; color: #d1d5db; cursor: pointer; }
+.nav-link.active { background: #1f2937; color: white; }
+.sidebar .logout { margin-top: auto; }
+
+.main-panel { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+.grid { display: grid; gap: 12px; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.metric-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+.metric-label { font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+.metric-value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+.metric-detail { font-size: 0.9rem; color: #4b5563; margin-top: 4px; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover { background: #f9fafb; }
+
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+input, select, button { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; background: white; }
+button { cursor: pointer; }
+button.secondary { background: #f3f4f6; }
+button.primary { background: #2563eb; color: white; border-color: #2563eb; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.status-badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 0.8rem; text-transform: capitalize; }
+.status-queued { background: #e0f2fe; color: #075985; }
+.status-scheduled { background: #fef3c7; color: #92400e; }
+.status-claimed { background: #ede9fe; color: #5b21b6; }
+.status-running { background: #dcfce7; color: #166534; }
+.status-completed { background: #d1fae5; color: #065f46; }
+.status-failed { background: #fee2e2; color: #b91c1c; }
+.status-dead-letter { background: #f3e8ff; color: #7e22ce; }
+.status-idle { background: #e5e7eb; color: #374151; }
+.status-busy { background: #dbeafe; color: #1d4ed8; }
+.status-dead { background: #fef2f2; color: #991b1b; }
+.status-default { background: #f3f4f6; color: #374151; }
+
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(560px, 100%); background: white; border-left: 1px solid #e5e7eb; box-shadow: -8px 0 20px rgba(0,0,0,0.08); padding: 20px; overflow: auto; }
+.inline-error { color: #b91c1c; margin-top: 8px; }
+.notice { background: #eff6ff; color: #1d4ed8; padding: 10px 12px; border-radius: 8px; }
+.small { color: #6b7280; font-size: 0.9rem; }
+
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

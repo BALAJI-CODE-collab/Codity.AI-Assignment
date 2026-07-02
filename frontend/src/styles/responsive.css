@@ -1,0 +1,33 @@
+@media (max-width: 1100px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  .main-column {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-column {
+    padding: 14px;
+  }
+
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-brand {
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import './layout.css';
+@import './sidebar.css';
+@import './header.css';
+@import './cards.css';
+@import './tables.css';
+@import './badges.css';
+@import './forms.css';
+@import './charts.css';
+@import './pages.css';
+@import './animations.css';
+@import './responsive.css';
+
+:root {
+  color-scheme: dark;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #f5f7ff;
+  background-color: #03050a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  background: #03050a;
+}
+
+body {
+  min-height: 100vh;
+  color: #f5f7ff;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent 92%);
+  opacity: 0.45;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  background: radial-gradient(circle at 16% 12%, rgba(0, 208, 255, 0.22), transparent 26%), radial-gradient(circle at 84% 10%, rgba(69, 96, 255, 0.2), transparent 24%), radial-gradient(circle at 50% 100%, rgba(67, 57, 255, 0.19), transparent 30%);
+  filter: blur(30px);
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: rgba(0, 208, 255, 0.32);
+  color: #f5f7ff;
+}

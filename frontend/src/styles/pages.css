@@ -1,0 +1,260 @@
+.page-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.page-title p {
+  margin: 3px 0 0;
+  color: #8fa0b9;
+}
+
+.hero-panel {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(0, 208, 255, 0.16), rgba(79, 103, 255, 0.12));
+  border-radius: 22px;
+  border: 1px solid rgba(0, 208, 255, 0.22);
+}
+
+.empty-state {
+  padding: 38px 24px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 20px;
+  background: rgba(4, 7, 14, 0.8);
+  color: #8fa0b9;
+}
+
+.architecture-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.architecture-svg {
+  width: 100%;
+  height: 360px;
+  border-radius: 20px;
+  background: radial-gradient(circle at top, rgba(0, 208, 255, 0.16), transparent 55%), rgba(5, 8, 14, 0.94);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px;
+}
+
+.architecture-link {
+  stroke: url(#flowGradient);
+  stroke-width: 2.4;
+  stroke-dasharray: 5 4;
+  animation: dash 3s linear infinite;
+}
+
+.architecture-node {
+  fill: rgba(8, 13, 23, 0.95);
+  stroke: rgba(255,255,255,0.09);
+  filter: drop-shadow(0 10px 24px rgba(0,0,0,0.3));
+}
+
+.architecture-node-title {
+  fill: #f5f7ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.architecture-node-subtitle {
+  fill: #8fa0b9;
+  font-size: 12px;
+}
+
+.architecture-legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.legend-pill {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: #dfe7f7;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.queue-card, .worker-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.queue-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.queue-card-name {
+  font-weight: 700;
+  color: #f5f7ff;
+}
+
+.queue-card-subtitle {
+  color: #8fa0b9;
+  font-size: 0.86rem;
+}
+
+.queue-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #8fa0b9;
+  font-size: 0.84rem;
+}
+
+.empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+}
+
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-state.compact {
+  padding: 22px;
+}
+
+.page-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 28px 28px 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(0, 208, 255, 0.12), rgba(7, 12, 22, 0.96));
+  border: 1px solid rgba(0, 208, 255, 0.16);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.3);
+}
+
+.hero-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4ae6ff;
+  margin-bottom: 8px;
+}
+
+.hero-title {
+  margin: 0 0 6px;
+  font-size: 1.55rem;
+  color: #f5f7ff;
+}
+
+.hero-copy {
+  margin: 0;
+  color: #8fa0b9;
+  max-width: 760px;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.hero-chip {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: #dfe7f7;
+  font-size: 0.78rem;
+}
+
+.pipeline-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pipeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.pipeline-title {
+  font-weight: 700;
+  color: #f5f7ff;
+  font-size: 1rem;
+}
+
+.pipeline-subtitle {
+  color: #8fa0b9;
+  font-size: 0.86rem;
+  margin-top: 2px;
+}
+
+.pipeline-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(0, 208, 255, 0.14);
+  color: #8eefff;
+  border: 1px solid rgba(0, 208, 255, 0.24);
+  font-size: 0.8rem;
+}
+
+.pipeline-svg {
+  width: 100%;
+  height: 320px;
+  background: radial-gradient(circle at top, rgba(0, 208, 255, 0.16), transparent 42%), rgba(5, 8, 14, 0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.pipeline-edge {
+  stroke: url(#pipelineGradient);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.9;
+  stroke-dasharray: 7 5;
+  animation: pipelineDash 2.6s linear infinite;
+}
+
+.pipeline-edge-failure {
+  stroke: rgba(251, 113, 133, 0.9);
+  stroke-dasharray: 6 6;
+}
+
+.pipeline-node {
+  filter: drop-shadow(0 10px 28px rgba(2, 6, 23, 0.32));
+}
+
+.pipeline-node-label {
+  fill: #f5f7ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pipeline-node-count {
+  fill: #dfe7f7;
+  font-size: 12px;
+}

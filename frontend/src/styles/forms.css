@@ -1,0 +1,77 @@
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.input,
+.select,
+.textarea,
+.button {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(10, 12, 16, 0.9);
+  color: #f8fafc;
+  padding: 12px 14px;
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: rgba(255, 138, 0, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.16);
+}
+
+.button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  padding: 11px 14px;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #ff8a00, #f59e0b);
+  border-color: transparent;
+  color: white;
+}
+
+.button-secondary {
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+}
+
+.button-danger {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.button-ghost {
+  background: transparent;
+  color: #cbd5e1;
+  border-color: transparent;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at top, rgba(255, 138, 0, 0.24), transparent 30%), #08090c;
+}
+
+.auth-card {
+  width: min(460px, 100%);
+  background: rgba(17, 19, 24, 0.95);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+}
