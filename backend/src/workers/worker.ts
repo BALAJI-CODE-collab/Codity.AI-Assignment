@@ -30,6 +30,9 @@ function createWorkerContext(workerId: string): WorkerContext {
 async function runWorkerLoop(context: WorkerContext) {
   while (!context.isShuttingDown) {
     await pollForJobs(context);
+    if (context.isShuttingDown) {
+      break;
+    }
     await sleep(context.pollInterval);
   }
 }
@@ -41,6 +44,10 @@ async function pollForJobs(context: WorkerContext) {
 
   const candidates = [] as Array<{ id: string; queueId: string }>;
   for (let index = 0; index < context.config.batchSize; index += 1) {
+    if (context.isShuttingDown) {
+      break;
+    }
+
     const nextJob = await claimNextJob(context.workerId);
     if (!nextJob) {
       break;
@@ -101,8 +108,13 @@ async function registerWorker() {
 }
 
 async function handleShutdown(context: WorkerContext) {
+  if (context.isShuttingDown) {
+    return;
+  }
+
   context.isShuttingDown = true;
   await Promise.allSettled([...context.runningPromises]);
+  await updateWorkerStatus(context.workerId, 'idle');
 }
 
 async function main() {
