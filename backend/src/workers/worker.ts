@@ -2,11 +2,15 @@ import os from 'os';
 import process from 'process';
 import { claimNextJob, createWorker, updateWorkerStatus } from '../repositories/jobRepository';
 import { executeJobLifecycle } from '../services/jobLifecycleService';
+import { heartbeatWorker, recoverDeadWorkers, runSchedulerTick } from '../services/reliabilityService';
 
 export interface WorkerContext {
   workerId: string;
   isShuttingDown: boolean;
   pollInterval: number;
+  heartbeatInterval: number;
+  deadWorkerTimeoutMs: number;
+  schedulerInterval: number;
   inFlightJobsPerQueue: Map<string, number>;
   runningPromises: Set<Promise<void>>;
   config: {
@@ -19,6 +23,9 @@ function createWorkerContext(workerId: string): WorkerContext {
     workerId,
     isShuttingDown: false,
     pollInterval: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 1000),
+    heartbeatInterval: Number(process.env.WORKER_HEARTBEAT_INTERVAL_MS ?? 5000),
+    deadWorkerTimeoutMs: Number(process.env.WORKER_DEAD_WORKER_TIMEOUT_MS ?? 15000),
+    schedulerInterval: Number(process.env.WORKER_SCHEDULER_INTERVAL_MS ?? 1000),
     inFlightJobsPerQueue: new Map<string, number>(),
     runningPromises: new Set<Promise<void>>(),
     config: {
@@ -95,6 +102,28 @@ async function executeJob(context: WorkerContext, jobId: string, queueId: string
   }
 }
 
+async function runHeartbeatLoop(context: WorkerContext) {
+  while (!context.isShuttingDown) {
+    await heartbeatWorker(context.workerId, async (workerId) => {
+      await import('../repositories/jobRepository').then((module) => module.recordWorkerHeartbeat(workerId));
+    });
+    if (context.isShuttingDown) {
+      break;
+    }
+    await sleep(context.heartbeatInterval);
+  }
+}
+
+async function runSchedulerLoop(context: WorkerContext) {
+  while (!context.isShuttingDown) {
+    await runSchedulerTick();
+    if (context.isShuttingDown) {
+      break;
+    }
+    await sleep(context.schedulerInterval);
+  }
+}
+
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -130,7 +159,11 @@ async function main() {
     void handleShutdown(context);
   });
 
-  await runWorkerLoop(context);
+  await Promise.all([
+    runWorkerLoop(context),
+    runHeartbeatLoop(context),
+    runSchedulerLoop(context),
+  ]);
 }
 
 void main().catch((error) => {

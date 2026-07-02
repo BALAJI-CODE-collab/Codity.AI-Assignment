@@ -149,6 +149,144 @@ export async function updateWorkerStatus(workerId: string, status: 'idle' | 'bus
   return result.rows[0] ?? null;
 }
 
+export async function recordWorkerHeartbeat(workerId: string) {
+  await pool.query(
+    `UPDATE workers SET last_seen_at = NOW() WHERE id = $1`,
+    [workerId]
+  );
+  await pool.query(
+    `INSERT INTO worker_heartbeats (worker_id, timestamp, active_job_count) VALUES ($1, NOW(), 0)`,
+    [workerId]
+  );
+}
+
+export async function findStaleWorkers(timeoutMs: number) {
+  const result = await pool.query(
+    `SELECT id, hostname, status, started_at, last_seen_at
+     FROM workers
+     WHERE status <> 'dead' AND last_seen_at < NOW() - ($1::text || ' milliseconds')::interval`,
+    [timeoutMs]
+  );
+  return result.rows;
+}
+
+export async function recoverJobsForWorker(workerId: string) {
+  const result = await pool.query(
+    `UPDATE jobs
+     SET status = 'queued', worker_id = NULL, updated_at = NOW()
+     WHERE worker_id = $1 AND status IN ('claimed', 'running')
+     RETURNING id`,
+    [workerId]
+  );
+  return result.rows;
+}
+
+export async function handleJobFailureWithRetry(jobId: string, queueId: string, payload: Record<string, unknown>, failureReason: string) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const policyResult = await client.query(
+      `SELECT retry_policies.strategy, retry_policies.base_delay_ms, retry_policies.max_delay_ms, retry_policies.max_attempts
+       FROM queues
+       LEFT JOIN retry_policies ON queues.retry_policy_id = retry_policies.id
+       WHERE queues.id = $1`,
+      [queueId]
+    );
+
+    const jobResult = await client.query(
+      `SELECT attempts, max_attempts FROM jobs WHERE id = $1 FOR UPDATE`,
+      [jobId]
+    );
+
+    const job = jobResult.rows[0];
+    const retryPolicy = policyResult.rows[0];
+
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
+    const attempts = Number(job.attempts ?? 0);
+    const maxAttempts = Number(job.max_attempts ?? 1);
+
+    if (retryPolicy && attempts < maxAttempts) {
+      const baseDelayMs = Number(retryPolicy.base_delay_ms ?? 0);
+      const maxDelayMs = Number(retryPolicy.max_delay_ms ?? baseDelayMs);
+      const strategy = retryPolicy.strategy as 'fixed' | 'linear' | 'exponential';
+      let delayMs = baseDelayMs;
+
+      if (strategy === 'linear') {
+        delayMs = baseDelayMs * attempts;
+      } else if (strategy === 'exponential') {
+        delayMs = baseDelayMs * Math.pow(2, attempts - 1);
+      }
+
+      delayMs = Math.min(delayMs, maxDelayMs);
+      const nextRunAt = new Date(Date.now() + delayMs).toISOString();
+
+      await client.query(
+        `UPDATE jobs
+         SET status = 'queued', worker_id = NULL, run_at = $2, updated_at = NOW()
+         WHERE id = $1`,
+        [jobId, nextRunAt]
+      );
+
+      await client.query('COMMIT');
+      return { outcome: 'queued' as const, nextRunAt };
+    }
+
+    await client.query(
+      `INSERT INTO dead_letter_queue (original_job_id, queue_id, payload, failure_reason, moved_at)
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [jobId, queueId, JSON.stringify(payload ?? {}), failureReason]
+    );
+
+    await client.query(
+      `UPDATE jobs
+       SET status = 'dead_letter', worker_id = NULL, updated_at = NOW()
+       WHERE id = $1`,
+      [jobId]
+    );
+
+    await client.query('COMMIT');
+    return { outcome: 'dead_letter' as const };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function findDueScheduledJobs() {
+  const result = await pool.query(
+    `SELECT id, queue_id, cron_expression, payload, next_run_at
+     FROM scheduled_jobs
+     WHERE next_run_at <= NOW() AND is_active = TRUE`,
+    []
+  );
+  return result.rows;
+}
+
+export async function createScheduledJobRun(scheduledJobId: string, queueId: string, payload: Record<string, unknown>, runAt: string) {
+  const result = await pool.query(
+    `INSERT INTO jobs (queue_id, worker_id, type, payload, status, priority, run_at, attempts, max_attempts)
+     VALUES ($1, NULL, 'scheduled', $2, 'queued', 100, $3, 0, 1)
+     RETURNING id, queue_id, worker_id, type, payload, status, priority, run_at, attempts, max_attempts, batch_id, created_at, updated_at`,
+    [queueId, JSON.stringify(payload ?? {}), runAt]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function advanceScheduledJobNextRun(scheduledJobId: string, nextRunAt: string) {
+  const result = await pool.query(
+    `UPDATE scheduled_jobs SET next_run_at = $2 WHERE id = $1 RETURNING id, queue_id, cron_expression, payload, next_run_at, is_active, created_at`,
+    [scheduledJobId, nextRunAt]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function createJobInTransaction(client: PoolClient, input: {
   queueId: string;
   type: JobType;

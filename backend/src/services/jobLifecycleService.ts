@@ -1,5 +1,6 @@
 import { createJobExecution, finalizeJobExecution, finalizeJobOutcome, transitionJobToRunning } from '../repositories/jobRepository';
 import { handleJob } from '../workers/jobHandler';
+import { handleJobFailure } from './reliabilityService';
 
 export interface JobExecutionJob {
   id: string;
@@ -31,6 +32,7 @@ export async function executeJobLifecycle(workerId: string, job: JobExecutionJob
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     await finalizeJobExecution(execution.id, 'failed', durationMs, errorMessage);
     await finalizeJobOutcome(job.id, 'failed');
+    await handleJobFailure(job.id, job.queue_id, job.payload ?? {}, errorMessage);
     throw error;
   }
 }
