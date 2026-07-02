@@ -83,7 +83,7 @@ export async function createJobForQueue(userId: string, queueId: string, input: 
     try {
       await client.query('BEGIN');
       await createScheduledJobInTransaction(client, queueId, input.cronExpression ?? '', payload, runAt);
-      await createJobInTransaction(client, {
+      const job = await createJobInTransaction(client, {
         queueId,
         type: 'recurring',
         payload,
@@ -94,6 +94,7 @@ export async function createJobForQueue(userId: string, queueId: string, input: 
         maxAttempts,
       });
       await client.query('COMMIT');
+      return job;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

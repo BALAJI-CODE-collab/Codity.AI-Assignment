@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import app from '../src/app';
 
 async function createQueueContext() {
-  const email = `jobs-${Date.now()}@example.com`;
+  const unique = `${Date.now()}-${Math.round(Math.random() * 1000)}`;
+  const email = `jobs-${unique}@example.com`;
   const authResponse = await request(app)
     .post('/auth/register')
-    .send({ email, password: 'password123', name: 'Jobs User' });
+    .send({ email, password: 'password123', name: `Jobs User ${unique}` });
   const token = authResponse.body.token;
 
   const orgResponse = await request(app)
@@ -96,5 +97,16 @@ describe('jobs, retry and metrics', () => {
     expect(ready.status).toBe(200);
     expect(metrics.status).toBe(200);
     expect(metrics.body).toHaveProperty('total_jobs');
+  });
+
+  it('rejects queue stats access for users outside the queue organization', async () => {
+    const ownerContext = await createQueueContext();
+    const outsiderContext = await createQueueContext();
+
+    const response = await request(app)
+      .get(`/queues/${ownerContext.queueId}/stats`)
+      .set('Authorization', `Bearer ${outsiderContext.token}`);
+
+    expect(response.status).toBe(403);
   });
 });

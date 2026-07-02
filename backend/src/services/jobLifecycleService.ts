@@ -24,7 +24,7 @@ export async function executeJobLifecycle(workerId: string, job: JobExecutionJob
   try {
     await handleJob({ payload: job.payload });
     const durationMs = Date.now() - startedAt;
-    await finalizeJobExecution(execution.id, 'completed', durationMs, null);
+    await finalizeJobExecution(execution.id, 'succeeded', durationMs, null);
     await finalizeJobOutcome(job.id, 'completed');
     return { status: 'completed' as const, executionId: execution.id };
   } catch (error) {

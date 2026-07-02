@@ -9,9 +9,11 @@ interface WorkersProps {
   onRefresh: () => void;
   refreshing: boolean;
   userName: string;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function Workers({ workers, onRefresh, refreshing, userName }: WorkersProps) {
+export function Workers({ workers, onRefresh, refreshing, userName, loading, error }: WorkersProps) {
   return (
     <div className="page-stack">
       <Header title="Workers" subtitle="Track worker availability and heartbeat" userName={userName} status="Live" onRefresh={onRefresh} isRefreshing={refreshing} />
@@ -27,6 +29,12 @@ export function Workers({ workers, onRefresh, refreshing, userName }: WorkersPro
           <span className="hero-chip">Concurrency view</span>
         </div>
       </div>
+      {error ? (
+        <div className="inline-error">
+          <span>{error}</span>
+          <button type="button" className="button button-secondary" onClick={onRefresh}>Retry</button>
+        </div>
+      ) : null}
       <Card title="Worker fleet" subtitle="Current worker pool state">
         <DataTable
           columns={[
@@ -36,6 +44,7 @@ export function Workers({ workers, onRefresh, refreshing, userName }: WorkersPro
             { key: 'last_seen_at', label: 'Last seen', render: (row) => new Date((row as WorkerSummary).last_seen_at).toLocaleString() },
           ]}
           rows={workers}
+          loading={loading}
           emptyMessage="No workers are currently reporting in."
         />
       </Card>

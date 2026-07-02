@@ -11,9 +11,11 @@ interface JobsProps {
   onRefresh: () => void;
   refreshing: boolean;
   userName: string;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function Jobs({ jobs, onRefresh, refreshing, userName }: JobsProps) {
+export function Jobs({ jobs, onRefresh, refreshing, userName, loading, error }: JobsProps) {
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => jobs.filter((job) => job.type.toLowerCase().includes(search.toLowerCase()) || job.status.toLowerCase().includes(search.toLowerCase())), [jobs, search]);
 
@@ -32,6 +34,12 @@ export function Jobs({ jobs, onRefresh, refreshing, userName }: JobsProps) {
           <span className="hero-chip">Live feed</span>
         </div>
       </div>
+      {error ? (
+        <div className="inline-error">
+          <span>{error}</span>
+          <button type="button" className="button button-secondary" onClick={onRefresh}>Retry</button>
+        </div>
+      ) : null}
       <Card title="Job stream" subtitle="Search jobs by type or state" action={<SearchBox value={search} onChange={setSearch} placeholder="Search jobs" />}>
         <DataTable
           columns={[
@@ -43,7 +51,8 @@ export function Jobs({ jobs, onRefresh, refreshing, userName }: JobsProps) {
             { key: 'created_at', label: 'Created', render: (row) => new Date((row as JobSummary).created_at).toLocaleString() },
           ]}
           rows={filtered}
-          emptyMessage="No jobs match the current filters."
+          loading={loading && jobs.length === 0}
+          emptyMessage={search ? 'No jobs match the current filters.' : 'No jobs yet. Jobs will appear here when the selected queue receives work.'}
         />
       </Card>
     </div>

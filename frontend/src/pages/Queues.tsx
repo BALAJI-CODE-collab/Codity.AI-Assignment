@@ -10,9 +10,12 @@ interface QueuesProps {
   onRefresh: () => void;
   refreshing: boolean;
   userName: string;
+  loading?: boolean;
+  error?: string | null;
+  onCreateQueue?: () => void;
 }
 
-export function Queues({ queues, onRefresh, refreshing, userName }: QueuesProps) {
+export function Queues({ queues, onRefresh, refreshing, userName, loading, error, onCreateQueue }: QueuesProps) {
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => queues.filter((queue) => queue.name.toLowerCase().includes(search.toLowerCase())), [queues, search]);
 
@@ -31,6 +34,12 @@ export function Queues({ queues, onRefresh, refreshing, userName }: QueuesProps)
           <span className="hero-chip">Searchable</span>
         </div>
       </div>
+      {error ? (
+        <div className="inline-error">
+          <span>{error}</span>
+          <button type="button" className="button button-secondary" onClick={onRefresh}>Retry</button>
+        </div>
+      ) : null}
       <Card title="Queue inventory" subtitle="Search and inspect available queues" action={<SearchBox value={search} onChange={setSearch} placeholder="Search queues" />}>
         <DataTable
           columns={[
@@ -41,7 +50,10 @@ export function Queues({ queues, onRefresh, refreshing, userName }: QueuesProps)
             { key: 'created_at', label: 'Created', render: (row) => new Date((row as QueueSummary).created_at).toLocaleString() },
           ]}
           rows={filtered}
-          emptyMessage="No queues match the current search."
+          loading={loading}
+          emptyMessage={search ? 'No queues match the current search.' : 'No queues yet. Create your first queue to start scheduling jobs.'}
+          emptyActionLabel={!search ? 'Create queue' : undefined}
+          onEmptyAction={!search ? onCreateQueue : undefined}
         />
       </Card>
     </div>

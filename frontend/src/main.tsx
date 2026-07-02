@@ -11,6 +11,7 @@ import './styles/badges.css';
 import './styles/forms.css';
 import './styles/charts.css';
 import './styles/pages.css';
+import './styles/terminal-theme.css';
 import './styles/animations.css';
 import './styles/responsive.css';
 

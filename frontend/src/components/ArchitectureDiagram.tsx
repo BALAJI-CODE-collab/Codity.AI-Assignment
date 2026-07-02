@@ -1,62 +1,50 @@
-interface ArchitectureNode {
-  id: string;
-  title: string;
-  subtitle: string;
-  accent: string;
-}
-
-const nodes: ArchitectureNode[] = [
-  { id: 'client', title: 'Client', subtitle: 'Requests & events', accent: '#ff8a00' },
-  { id: 'gateway', title: 'API Gateway', subtitle: 'Routing & ingress', accent: '#3b82f6' },
-  { id: 'auth', title: 'Authentication', subtitle: 'JWT + sessions', accent: '#22c55e' },
-  { id: 'scheduler', title: 'Scheduler', subtitle: 'Work orchestration', accent: '#f59e0b' },
-  { id: 'queue', title: 'Priority Queue', subtitle: 'Buffered execution', accent: '#a855f7' },
-  { id: 'workers', title: 'Worker Pool', subtitle: 'Concurrent execution', accent: '#06b6d4' },
-  { id: 'db', title: 'Database', subtitle: 'State & metrics', accent: '#f43f5e' },
-  { id: 'monitor', title: 'Metrics Service', subtitle: 'Operational telemetry', accent: '#84cc16' },
-];
-
 export function ArchitectureDiagram() {
   return (
-    <div className="architecture-shell">
-      <svg viewBox="0 0 900 420" className="architecture-svg" role="img" aria-label="Scheduler architecture diagram">
+    <div className="architecture-shell architecture-blackbox-shell">
+      <svg viewBox="0 0 900 300" className="architecture-svg architecture-blackbox-svg" role="img" aria-label="Scheduler architecture blackbox diagram">
         <defs>
-          <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ff8a00" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.9" />
+          <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4ae6ff" stopOpacity="0.58" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.92" />
           </linearGradient>
+          <marker id="blackboxArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4ae6ff" />
+          </marker>
         </defs>
-        {[
-          ['client', 'gateway'],
-          ['gateway', 'auth'],
-          ['auth', 'scheduler'],
-          ['scheduler', 'queue'],
-          ['queue', 'workers'],
-          ['workers', 'db'],
-          ['db', 'monitor'],
-          ['monitor', 'client'],
-        ].map(([from, to], index) => (
-          <line key={`${from}-${to}`} x1={140 + (index % 2) * 120} y1={90 + Math.floor(index / 2) * 70} x2={220 + (index % 2) * 140} y2={90 + Math.floor(index / 2) * 70 + 30} className="architecture-link" />
-        ))}
-        {nodes.map((node, index) => {
-          const x = 70 + (index % 4) * 200;
-          const y = 70 + Math.floor(index / 4) * 150;
-          return (
-            <g key={node.id}>
-              <rect x={x} y={y} width="150" height="90" rx="18" className="architecture-node" />
-              <circle cx={x + 24} cy={y + 24} r="8" fill={node.accent} />
-              <text x={x + 42} y={y + 30} className="architecture-node-title">{node.title}</text>
-              <text x={x + 24} y={y + 58} className="architecture-node-subtitle">{node.subtitle}</text>
-            </g>
-          );
-        })}
+
+        <rect x="70" y="70" width="160" height="110" rx="16" className="architecture-box" />
+        <rect x="250" y="70" width="140" height="110" rx="18" className="architecture-box architecture-box-inset" />
+        <rect x="540" y="70" width="160" height="110" rx="16" className="architecture-box" />
+
+        <rect x="277" y="88" width="86" height="44" rx="10" className="architecture-blackbox" />
+        <path d="M 293 110 L 312 110" className="architecture-blackbox-detail" />
+        <path d="M 293 118 L 330 118" className="architecture-blackbox-detail" />
+        <path d="M 293 126 L 338 126" className="architecture-blackbox-detail" />
+
+        <text x="150" y="48" className="architecture-blackbox-label">YOUR DEVICE</text>
+        <text x="150" y="70" className="architecture-blackbox-subtitle">Client</text>
+
+        <text x="320" y="48" className="architecture-blackbox-label">BLACKBOX</text>
+        <text x="320" y="70" className="architecture-blackbox-subtitle">Execution proxy</text>
+
+        <text x="620" y="48" className="architecture-blackbox-label">MODEL END</text>
+        <text x="620" y="70" className="architecture-blackbox-subtitle">Backend service</text>
+
+        <g className="architecture-link-group">
+          <line x1="230" y1="120" x2="250" y2="120" className="architecture-blackbox-link" />
+          <line x1="390" y1="120" x2="540" y2="120" className="architecture-blackbox-link" markerEnd="url(#blackboxArrow)" />
+        </g>
+
+        <g className="architecture-link-text">
+          <text x="272" y="104" className="architecture-link-note">ENCRYPTED</text>
+          <text x="455" y="104" className="architecture-link-note">ENCRYPTED</text>
+        </g>
       </svg>
 
-      <div className="architecture-legend">
-        <div className="legend-pill">Data flow</div>
-        <div className="legend-pill">Heartbeat flow</div>
-        <div className="legend-pill">Retry flow</div>
-        <div className="legend-pill">Monitoring flow</div>
+      <div className="architecture-legend architecture-blackbox-legend">
+        <div className="legend-pill">Client to proxy</div>
+        <div className="legend-pill">Encrypted transport</div>
+        <div className="legend-pill">Backend processing</div>
       </div>
     </div>
   );

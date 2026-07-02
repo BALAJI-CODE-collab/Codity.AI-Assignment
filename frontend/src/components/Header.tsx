@@ -25,7 +25,7 @@ export function Header({ title, subtitle, userName, status, onRefresh, isRefresh
           </div>
         </div>
         <button type="button" className="button button-secondary" onClick={onRefresh}>
-          {isRefreshing ? 'Refreshing…' : 'Refresh'}
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
     </header>

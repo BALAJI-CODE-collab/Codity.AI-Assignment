@@ -9,9 +9,8 @@ export async function createJob(req: AuthRequest, res: Response, next: NextFunct
     if (!req.user) {
       throw new AppError(401, 'unauthorized', 'Authentication required');
     }
-    const parsed = jobCreateSchema.parse(req);
-    const id = String(req.params.id);
-    const result = await createJobForQueue(req.user.id, id, {
+    const parsed = jobCreateSchema.merge(paramsIdSchema).parse(req);
+    const result = await createJobForQueue(req.user.id, parsed.params.id, {
       type: parsed.body.type,
       payload: parsed.body.payload,
       priority: parsed.body.priority,
@@ -45,9 +44,8 @@ export async function listJobs(req: AuthRequest, res: Response, next: NextFuncti
     if (!req.user) {
       throw new AppError(401, 'unauthorized', 'Authentication required');
     }
-    const parsed = paginationSchema.parse(req);
-    const id = String(req.params.id);
-    const result = await listJobsForAuthenticatedQueue(req.user.id, id, parsed.query.page ?? 1, parsed.query.per_page ?? 20, parsed.query.status);
+    const parsed = paginationSchema.merge(paramsIdSchema).parse(req);
+    const result = await listJobsForAuthenticatedQueue(req.user.id, parsed.params.id, parsed.query.page ?? 1, parsed.query.per_page ?? 20, parsed.query.status);
     res.json(result);
   } catch (error) {
     next(error);

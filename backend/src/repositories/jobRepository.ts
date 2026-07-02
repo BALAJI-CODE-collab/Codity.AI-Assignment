@@ -72,7 +72,7 @@ export async function createJobExecution(jobId: string, workerId: string) {
   return result.rows[0] ?? null;
 }
 
-export async function finalizeJobExecution(executionId: string, status: 'completed' | 'failed', durationMs: number, errorMessage: string | null) {
+export async function finalizeJobExecution(executionId: string, status: 'succeeded' | 'failed', durationMs: number, errorMessage: string | null) {
   const result = await pool.query(
     `UPDATE job_executions
      SET finished_at = NOW(), status = $1, duration_ms = $2, error_message = $3
@@ -99,8 +99,16 @@ export async function claimNextJob(workerId: string) {
     `WITH next_job AS (
         SELECT jobs.id
         FROM jobs
+        JOIN queues ON queues.id = jobs.queue_id
         WHERE jobs.status = 'queued'
           AND jobs.run_at <= NOW()
+          AND queues.is_paused = FALSE
+          AND (
+            SELECT COUNT(*)
+            FROM jobs active_jobs
+            WHERE active_jobs.queue_id = jobs.queue_id
+              AND active_jobs.status IN ('claimed', 'running')
+          ) < queues.max_concurrency
         ORDER BY jobs.priority DESC, jobs.run_at ASC, jobs.created_at ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED

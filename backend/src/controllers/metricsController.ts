@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth';
 import {
   getHealthStatus,
   getMetrics,
@@ -7,6 +8,9 @@ import {
   getWorker,
   getWorkers,
 } from '../services/metricsService';
+import { getQueue } from '../services/queueService';
+import { AppError } from '../types/errors';
+import { paramsIdSchema } from '../validators/schemas';
 
 export async function healthCheck(req: Request, res: Response, next: NextFunction) {
   try {
@@ -35,10 +39,14 @@ export async function metricsOverview(req: Request, res: Response, next: NextFun
   }
 }
 
-export async function queueStats(req: Request, res: Response, next: NextFunction) {
+export async function queueStats(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
-    const queueId = Array.isArray(id) ? id[0] : id;
+    if (!req.user) {
+      throw new AppError(401, 'unauthorized', 'Authentication required');
+    }
+    const parsed = paramsIdSchema.parse(req);
+    const queueId = parsed.params.id;
+    await getQueue(req.user.id, queueId);
     const result = await getQueueStatistics(queueId);
     if (!result) {
       res.status(404).json({ error: { code: 'queue_not_found', message: 'Queue not found' } });

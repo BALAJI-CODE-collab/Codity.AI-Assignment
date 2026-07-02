@@ -34,6 +34,17 @@ function normalize(value: number, maximum: number) {
 export function PipelineFlow({ metrics }: PipelineFlowProps) {
   const [time, setTime] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleMotionPreference = () => setReduceMotion(media.matches);
+
+    handleMotionPreference();
+    media.addEventListener('change', handleMotionPreference);
+
+    return () => media.removeEventListener('change', handleMotionPreference);
+  }, []);
 
   useEffect(() => {
     const handleVisibility = () => {
@@ -47,7 +58,7 @@ export function PipelineFlow({ metrics }: PipelineFlowProps) {
   }, []);
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || reduceMotion) return;
 
     let frame = 0;
     let last = performance.now();
@@ -61,7 +72,7 @@ export function PipelineFlow({ metrics }: PipelineFlowProps) {
 
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [isVisible]);
+  }, [isVisible, reduceMotion]);
 
   const safeMetrics = metrics ?? {
     total_jobs: 0,
@@ -158,7 +169,7 @@ export function PipelineFlow({ metrics }: PipelineFlowProps) {
           return (
             <g key={edge.id}>
               <path d={path} className={`pipeline-edge ${edge.isPrimary ? '' : 'pipeline-edge-failure'}`} markerEnd="url(#pipelineArrow)" />
-              {edge.from.count > 0 ? (
+              {edge.from.count > 0 && !reduceMotion ? (
                 <g>
                   <circle cx={pulseX} cy={pulseY} r={pulseSize} fill={edge.color} opacity={0.95} />
                   <circle cx={pulseX} cy={pulseY} r={glowSize} fill={edge.color} opacity={0.16} />

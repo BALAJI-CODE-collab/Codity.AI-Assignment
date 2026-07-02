@@ -1,14 +1,13 @@
 .chart-card {
-  background: linear-gradient(180deg, rgba(7, 12, 22, 0.94), rgba(5, 8, 15, 0.97));
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
-  padding: 16px;
+  background: #111215;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
   min-height: 280px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .chart-caption {
   font-size: 0.9rem;
-  color: #8fa0b9;
-  margin-top: 8px;
+  color: var(--muted);
+  margin-top: 10px;
 }

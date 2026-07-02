@@ -1,27 +1,22 @@
 .header {
-  padding: 0 0 2px;
+  padding: 0 0 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-}
-
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .header-status {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(0, 208, 255, 0.12);
-  color: #94f0ff;
-  font-size: 0.92rem;
-  border: 1px solid rgba(0, 208, 255, 0.2);
+  background: rgba(74, 230, 255, 0.12);
+  color: var(--accent);
+  font-size: 0.9rem;
+  border: 1px solid rgba(74, 230, 255, 0.22);
 }
 
 .header-status::before {
@@ -29,27 +24,27 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #4ae6ff;
-  box-shadow: 0 0 0 4px rgba(0, 208, 255, 0.16);
+  background: var(--accent);
 }
 
 .header-user {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #111215;
+  border: 1px solid var(--border);
 }
 
 .user-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #00d8ff, #4f67ff);
+  background: var(--panel);
+  color: var(--text);
   font-weight: 700;
 }
 

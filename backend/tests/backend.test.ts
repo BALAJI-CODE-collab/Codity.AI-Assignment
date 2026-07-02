@@ -5,8 +5,10 @@ import { createQueueForProject, getQueue, listQueuesForProject, updateQueueById 
 import { createJobForQueue, listJobsForAuthenticatedQueue, retryJob } from '../src/services/jobService';
 import { getHealthStatus, getMetrics, getReadinessStatus, getWorker, getWorkers } from '../src/services/metricsService';
 import { handleJobFailure, runSchedulerTick } from '../src/services/reliabilityService';
+import { executeJobLifecycle } from '../src/services/jobLifecycleService';
 import { pool } from '../src/repositories/db';
 import {
+  claimNextJob,
   createWorker,
   recordWorkerHeartbeat,
   updateJobStatus,
@@ -76,6 +78,62 @@ describe('backend integration tests', () => {
     const retriedJob = await retryJob(registered.user.id, createdJob.id);
     expect(retriedJob?.status).toBe('queued');
     expect(retriedJob?.attempts).toBe(0);
+  });
+
+  it('creates one queued job and one schedule definition for recurring jobs', async () => {
+    const registered = await registerUser(`recurring-${Date.now()}@example.com`, 'secret1234', 'Dorothy');
+    const organizations = await listUserOrganizations(registered.user.id);
+    const orgId = organizations[0].id;
+    const project = await createProjectForOrg(registered.user.id, orgId, 'Recurring');
+    const queue = await createQueueForProject(registered.user.id, project.id, 'recurring', 10, 1, null, false);
+
+    const createdJob = await createJobForQueue(registered.user.id, queue.id, {
+      type: 'recurring',
+      payload: { recurring: true },
+      cronExpression: '* * * * *',
+      runAt: new Date().toISOString(),
+    });
+
+    expect(createdJob.type).toBe('recurring');
+
+    const jobCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM jobs WHERE queue_id = $1', [queue.id]);
+    const scheduleCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM scheduled_jobs WHERE queue_id = $1', [queue.id]);
+    expect(jobCount.rows[0].count).toBe(1);
+    expect(scheduleCount.rows[0].count).toBe(1);
+  });
+
+  it('does not claim jobs from paused queues or queues at max concurrency', async () => {
+    const registered = await registerUser(`claim-${Date.now()}@example.com`, 'secret1234', 'Edsger');
+    const organizations = await listUserOrganizations(registered.user.id);
+    const orgId = organizations[0].id;
+    const project = await createProjectForOrg(registered.user.id, orgId, 'Claiming');
+    const pausedQueue = await createQueueForProject(registered.user.id, project.id, 'paused', 10, 1, null, true);
+    const busyQueue = await createQueueForProject(registered.user.id, project.id, 'busy', 10, 1, null, false);
+    const worker = await createWorker('claim-worker');
+
+    await createJobForQueue(registered.user.id, pausedQueue.id, { type: 'immediate' });
+    const busyJob = await createJobForQueue(registered.user.id, busyQueue.id, { type: 'immediate' });
+    await updateJobStatus(busyJob.id, 'running', worker.id, 1);
+    await createJobForQueue(registered.user.id, busyQueue.id, { type: 'immediate' });
+
+    const claimed = await claimNextJob(worker.id);
+    expect(claimed).toBeNull();
+  });
+
+  it('records successful job executions with the execution succeeded status', async () => {
+    const registered = await registerUser(`lifecycle-${Date.now()}@example.com`, 'secret1234', 'Barbara');
+    const organizations = await listUserOrganizations(registered.user.id);
+    const orgId = organizations[0].id;
+    const project = await createProjectForOrg(registered.user.id, orgId, 'Lifecycle');
+    const queue = await createQueueForProject(registered.user.id, project.id, 'lifecycle', 10, 1, null, false);
+    const worker = await createWorker('lifecycle-worker');
+    const job = await createJobForQueue(registered.user.id, queue.id, { type: 'immediate', payload: { ok: true } });
+
+    await updateJobStatus(job.id, 'claimed', worker.id, 0);
+    await executeJobLifecycle(worker.id, { id: job.id, queue_id: queue.id, payload: job.payload });
+
+    const execution = await pool.query('SELECT status FROM job_executions WHERE job_id = $1', [job.id]);
+    expect(execution.rows[0].status).toBe('succeeded');
   });
 
   it('records worker heartbeats and reports worker details', async () => {

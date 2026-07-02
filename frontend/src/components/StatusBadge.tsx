@@ -1,4 +1,4 @@
-import type { JobStatus } from '../types';
+import { useEffect, useRef, useState } from 'react';
 
 interface StatusBadgeProps {
   status: string;
@@ -18,6 +18,17 @@ const statusStyles: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const previousStatus = useRef(status);
+  const [changed, setChanged] = useState(false);
+
+  useEffect(() => {
+    if (previousStatus.current === status) return;
+    previousStatus.current = status;
+    setChanged(true);
+    const timer = window.setTimeout(() => setChanged(false), 520);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   const label = status.replace(/_/g, ' ');
-  return <span className={`status-badge ${statusStyles[status] ?? 'status-default'}`}>{label}</span>;
+  return <span className={`status-badge ${statusStyles[status] ?? 'status-default'}${changed ? ' status-changed' : ''}`}>{label}</span>;
 }

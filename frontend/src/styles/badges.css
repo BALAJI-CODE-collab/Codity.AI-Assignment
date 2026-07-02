@@ -7,6 +7,7 @@
   font-weight: 600;
   text-transform: capitalize;
   letter-spacing: 0.01em;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .status-queued { background: rgba(245, 158, 11, 0.16); color: #fde68a; }
@@ -20,3 +21,8 @@
 .status-busy { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; }
 .status-dead { background: rgba(239, 68, 68, 0.16); color: #fecaca; }
 .status-default { background: rgba(148, 163, 184, 0.16); color: #cbd5e1; }
+
+.status-changed {
+  box-shadow: 0 0 0 4px rgba(74, 230, 255, 0.16);
+  transform: translateY(-1px);
+}
