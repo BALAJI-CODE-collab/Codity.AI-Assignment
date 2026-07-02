@@ -1,0 +1,46 @@
+import { NextFunction, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+import { createQueueForProject, getQueue, updateQueueById } from '../services/queueService';
+import { AppError } from '../types/errors';
+import { queuePatchSchema, queueSchema, queueParamsSchema } from '../validators/schemas';
+
+export async function createQueue(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) {
+      throw new AppError(401, 'unauthorized', 'Authentication required');
+    }
+    const parsed = queueSchema.parse(req);
+    const id = String(req.params.id);
+    const result = await createQueueForProject(req.user.id, id, parsed.body.name, parsed.body.priority ?? 100, parsed.body.max_concurrency ?? 1, parsed.body.retry_policy_id ?? null, parsed.body.is_paused ?? false);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getQueueById(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) {
+      throw new AppError(401, 'unauthorized', 'Authentication required');
+    }
+    const parsed = queueParamsSchema.parse(req);
+    const result = await getQueue(req.user.id, parsed.params.id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function patchQueue(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) {
+      throw new AppError(401, 'unauthorized', 'Authentication required');
+    }
+    const parsed = queuePatchSchema.parse(req);
+    const id = String(req.params.id);
+    const result = await updateQueueById(req.user.id, id, parsed.body);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
