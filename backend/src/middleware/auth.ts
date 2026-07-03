@@ -8,10 +8,14 @@ export interface AuthRequest extends Request {
 
 export function authenticateToken(req: AuthRequest, _res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new AppError(401, 'unauthorized', 'Missing token'));
+  }
+  let token = authHeader.substring(7).trim();
+  if (token.startsWith('"') && token.endsWith('"')) {
+    token = token.slice(1, -1);
+  } else if (token.startsWith("'") && token.endsWith("'")) {
+    token = token.slice(1, -1);
   }
 
   const secret = process.env.JWT_SECRET;
@@ -23,7 +27,8 @@ export function authenticateToken(req: AuthRequest, _res: Response, next: NextFu
     const payload = jwt.verify(token, secret) as { sub: string; email: string; name: string };
     req.user = { id: payload.sub, email: payload.email, name: payload.name };
     next();
-  } catch {
+  } catch (error) {
+    console.error('JWT Verification Error:', error);
     next(new AppError(401, 'unauthorized', 'Invalid token'));
   }
 }

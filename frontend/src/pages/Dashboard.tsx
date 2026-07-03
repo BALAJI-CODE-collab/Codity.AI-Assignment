@@ -7,13 +7,23 @@ import { ArchitectureDiagram } from '../components/ArchitectureDiagram';
 import { JobsChart } from '../components/charts/JobsChart';
 import { QueueChart } from '../components/charts/QueueChart';
 import { WorkerChart } from '../components/charts/WorkerChart';
-import type { JobSummary, MetricsSummary, ProjectSummary, QueueSummary, WorkerSummary } from '../types';
+import type { JobSummary, MetricsSummary, OrganizationSummary, ProjectSummary, QueueSummary, WorkerSummary } from '../types';
 
 interface QueueFormState {
   name: string;
   priority: string;
   maxConcurrency: string;
   isPaused: string;
+}
+
+interface JobFormState {
+  type: string;
+  payload: string;
+  priority: string;
+  maxAttempts: string;
+  runAt: string;
+  cronExpression: string;
+  jobCount: string;
 }
 
 interface DashboardProps {
@@ -24,14 +34,26 @@ interface DashboardProps {
   health: { status: string; database: string; timestamp: string } | null;
   jobs: JobSummary[];
   workers: WorkerSummary[];
+  organizations: OrganizationSummary[];
   projects: ProjectSummary[];
+  selectedOrgId: string;
   selectedProjectId: string;
   selectedQueueId: string;
+  orgName: string;
+  projectName: string;
   queueForm: QueueFormState;
+  jobForm: JobFormState;
+  onOrgChange: (orgId: string) => void;
   onProjectChange: (projectId: string) => void;
   onQueueChange: (queueId: string) => void;
+  onOrgNameChange: (name: string) => void;
+  onProjectNameChange: (name: string) => void;
   onQueueFormChange: (nextForm: QueueFormState) => void;
+  onJobFormChange: (nextForm: JobFormState) => void;
+  onCreateOrganization: () => void;
+  onCreateProject: () => void;
   onCreateQueue: () => void;
+  onCreateJob: () => void;
   onRefresh: () => void;
   refreshing: boolean;
   loading?: boolean;
@@ -67,7 +89,7 @@ const relativeAge = (timestamp: string | null) => {
   return `${Math.round(diff / 3600000)}h ago`;
 };
 
-export function Dashboard({ metrics, prevMetrics, queues, queueStats, health, jobs, workers, projects, selectedProjectId, selectedQueueId, queueForm, onProjectChange, onQueueChange, onQueueFormChange, onCreateQueue, onRefresh, refreshing, loading, jobsLoading, userName }: DashboardProps) {
+export function Dashboard({ metrics, prevMetrics, queues, queueStats, health, jobs, workers, organizations, projects, selectedOrgId, selectedProjectId, selectedQueueId, orgName, projectName, queueForm, jobForm, onOrgChange, onProjectChange, onQueueChange, onOrgNameChange, onProjectNameChange, onQueueFormChange, onJobFormChange, onCreateOrganization, onCreateProject, onCreateQueue, onCreateJob, onRefresh, refreshing, loading, jobsLoading, userName }: DashboardProps) {
   const [lastPoll, setLastPoll] = useState('-');
 
   useEffect(() => {
@@ -200,12 +222,36 @@ export function Dashboard({ metrics, prevMetrics, queues, queueStats, health, jo
       <div className="card">
         <div className="card-header">
           <div>
-            <h3>Queue controls</h3>
-            <div className="card-subtitle">Create queues and inspect the selected queue snapshot</div>
+            <h3>Workflow controls</h3>
+            <div className="card-subtitle">Create organizations, projects, queues, and jobs against the live API</div>
           </div>
           <div className="header-status">{health?.status ?? 'Unknown'}</div>
         </div>
         <div className="control-grid">
+          <label className="field-stack">
+            <span>Organization</span>
+            <select className="select" value={selectedOrgId} onChange={(event) => onOrgChange(event.target.value)}>
+              {organizations.length > 0 ? (
+                organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)
+              ) : (
+                <option value="">No organizations available</option>
+              )}
+            </select>
+          </label>
+          <label className="field-stack">
+            <span>New organization</span>
+            <input className="input" value={orgName} onChange={(event) => onOrgNameChange(event.target.value)} placeholder="Organization name" />
+          </label>
+          <button type="button" className="button button-secondary" onClick={onCreateOrganization} disabled={!orgName.trim()}>
+            Create organization
+          </button>
+          <label className="field-stack">
+            <span>New project</span>
+            <input className="input" value={projectName} onChange={(event) => onProjectNameChange(event.target.value)} placeholder="Project name" />
+          </label>
+          <button type="button" className="button button-secondary" onClick={onCreateProject} disabled={!selectedOrgId || !projectName.trim()}>
+            Create project
+          </button>
           <label className="field-stack">
             <span>Project</span>
             <select className="select" value={selectedProjectId} onChange={(event) => onProjectChange(event.target.value)}>
@@ -247,6 +293,43 @@ export function Dashboard({ metrics, prevMetrics, queues, queueStats, health, jo
           </label>
           <button type="button" className="button button-primary" onClick={onCreateQueue} disabled={!selectedProjectId || !queueForm.name.trim()}>
             Create queue
+          </button>
+          <label className="field-stack">
+            <span>Job type</span>
+            <select className="select" value={jobForm.type} onChange={(event) => onJobFormChange({ ...jobForm, type: event.target.value })}>
+              <option value="immediate">Immediate</option>
+              <option value="delayed">Delayed</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="recurring">Recurring</option>
+              <option value="batch">Batch</option>
+            </select>
+          </label>
+          <label className="field-stack">
+            <span>Payload JSON</span>
+            <input className="input" value={jobForm.payload} onChange={(event) => onJobFormChange({ ...jobForm, payload: event.target.value })} placeholder='{"task":"send-email"}' />
+          </label>
+          <label className="field-stack">
+            <span>Job priority</span>
+            <input className="input" type="number" min="0" value={jobForm.priority} onChange={(event) => onJobFormChange({ ...jobForm, priority: event.target.value })} />
+          </label>
+          <label className="field-stack">
+            <span>Max attempts</span>
+            <input className="input" type="number" min="1" value={jobForm.maxAttempts} onChange={(event) => onJobFormChange({ ...jobForm, maxAttempts: event.target.value })} />
+          </label>
+          <label className="field-stack">
+            <span>Run at</span>
+            <input className="input" type="datetime-local" value={jobForm.runAt} onChange={(event) => onJobFormChange({ ...jobForm, runAt: event.target.value })} />
+          </label>
+          <label className="field-stack">
+            <span>Cron</span>
+            <input className="input" value={jobForm.cronExpression} onChange={(event) => onJobFormChange({ ...jobForm, cronExpression: event.target.value })} placeholder="* * * * *" />
+          </label>
+          <label className="field-stack">
+            <span>Batch count</span>
+            <input className="input" type="number" min="1" value={jobForm.jobCount} onChange={(event) => onJobFormChange({ ...jobForm, jobCount: event.target.value })} />
+          </label>
+          <button type="button" className="button button-primary" onClick={onCreateJob} disabled={!selectedQueueId}>
+            Create job
           </button>
         </div>
         {queueStats ? (

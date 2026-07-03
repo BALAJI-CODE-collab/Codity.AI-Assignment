@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { clearStoredAuthSession, createQueue, getHealth, getMetrics, getQueueStats, getStoredAuthSession, listJobs, listProjects, listQueues, listWorkers, login, register } from './api/client';
+import { clearStoredAuthSession, createJob, createOrganization, createProject, createQueue, getHealth, getMetrics, getQueueStats, getStoredAuthSession, listJobs, listOrganizations, listProjects, listQueues, listWorkers, login, register } from './api/client';
 import { usePolling } from './hooks/usePolling';
 import { Dashboard } from './pages/Dashboard';
 import { Jobs } from './pages/Jobs';
@@ -7,7 +7,7 @@ import { Login } from './pages/Login';
 import { Metrics } from './pages/Metrics';
 import { Queues } from './pages/Queues';
 import { Workers } from './pages/Workers';
-import type { JobSummary, MetricsSummary, ProjectSummary, QueueStatsSummary, QueueSummary, WorkerSummary } from './types';
+import type { JobSummary, MetricsSummary, OrganizationSummary, ProjectSummary, QueueStatsSummary, QueueSummary, WorkerSummary } from './types';
 import './styles/global.css';
 
 type View = 'auth' | 'dashboard' | 'queues' | 'jobs' | 'workers' | 'metrics';
@@ -15,8 +15,10 @@ type View = 'auth' | 'dashboard' | 'queues' | 'jobs' | 'workers' | 'metrics';
 function App() {
   const [view, setView] = useState<View>('auth');
   const [session, setSession] = useState(getStoredAuthSession());
+  const [organizations, setOrganizations] = useState<OrganizationSummary[]>([]);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState('');
   const [selectedQueueId, setSelectedQueueId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [jobs, setJobs] = useState<JobSummary[]>([]);
@@ -31,10 +33,27 @@ function App() {
   const [jobsLoading, setJobsLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authForm, setAuthForm] = useState({ email: '', password: '', name: '' });
+  const [orgName, setOrgName] = useState('');
+  const [projectName, setProjectName] = useState('');
   const [queueForm, setQueueForm] = useState({ name: '', priority: '100', maxConcurrency: '1', isPaused: 'false' });
+  const [jobForm, setJobForm] = useState({ type: 'immediate', payload: '{}', priority: '100', maxAttempts: '1', runAt: '', cronExpression: '* * * * *', jobCount: '1' });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isAuthenticated = Boolean(session?.token);
+
+  const refreshOrganizations = useCallback(async () => {
+    try {
+      const data = await listOrganizations();
+      const nextOrganizations = data as OrganizationSummary[];
+      setOrganizations((prev) => (JSON.stringify(prev) === JSON.stringify(nextOrganizations) ? prev : nextOrganizations));
+      if (!selectedOrgId && nextOrganizations[0]) {
+        setSelectedOrgId(nextOrganizations[0].id);
+      }
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load organizations');
+    }
+  }, [selectedOrgId]);
 
   const refreshProjects = useCallback(async () => {
     try {
@@ -119,9 +138,9 @@ function App() {
     if (isAuthenticated) {
       setView('dashboard');
       setIsLoading(true);
-      void Promise.all([refreshProjects(), refreshWorkers(), refreshMetrics(), refreshHealth()]).finally(() => setIsLoading(false));
+      void Promise.all([refreshOrganizations(), refreshProjects(), refreshWorkers(), refreshMetrics(), refreshHealth()]).finally(() => setIsLoading(false));
     }
-  }, [isAuthenticated, refreshProjects, refreshWorkers, refreshMetrics, refreshHealth]);
+  }, [isAuthenticated, refreshOrganizations, refreshProjects, refreshWorkers, refreshMetrics, refreshHealth]);
 
   useEffect(() => {
     if (isAuthenticated && selectedProjectId) {
@@ -139,12 +158,12 @@ function App() {
   const pollDashboard = useCallback(async () => {
     if (!isAuthenticated) return;
 
-    await Promise.all([refreshProjects(), refreshWorkers(), refreshMetrics(), refreshHealth()]);
+    await Promise.all([refreshOrganizations(), refreshProjects(), refreshWorkers(), refreshMetrics(), refreshHealth()]);
 
     if (selectedQueueId) {
       await refreshJobs(selectedQueueId, 1, statusFilter);
     }
-  }, [isAuthenticated, refreshJobs, refreshMetrics, refreshProjects, refreshWorkers, refreshHealth, selectedQueueId, statusFilter]);
+  }, [isAuthenticated, refreshJobs, refreshMetrics, refreshOrganizations, refreshProjects, refreshWorkers, refreshHealth, selectedQueueId, statusFilter]);
 
   usePolling(pollDashboard, 4000);
 
@@ -156,6 +175,35 @@ function App() {
       setQueueStats(data as QueueStatsSummary);
     } catch {
       setQueueStats(null);
+    }
+  }
+
+  async function handleCreateOrganization() {
+    try {
+      const created = await createOrganization({ name: orgName.trim() });
+      setOrgName('');
+      setSelectedOrgId(created.id);
+      await refreshOrganizations();
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Organization creation failed');
+    }
+  }
+
+  async function handleCreateProject() {
+    try {
+      if (!selectedOrgId) {
+        setError('Select an organization before creating a project.');
+        return;
+      }
+      const created = await createProject({ org_id: selectedOrgId, name: projectName.trim() });
+      setProjectName('');
+      setSelectedProjectId(created.id);
+      await refreshProjects();
+      await refreshQueues(created.id);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Project creation failed');
     }
   }
 
@@ -177,6 +225,56 @@ function App() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Queue creation failed');
+    }
+  }
+
+  async function handleCreateJob() {
+    try {
+      if (!selectedQueueId) {
+        setError('Select a queue before creating a job.');
+        return;
+      }
+
+      let parsedPayload: Record<string, unknown>;
+      try {
+        parsedPayload = jobForm.payload.trim() ? JSON.parse(jobForm.payload) : {};
+      } catch {
+        setError('Payload must be valid JSON.');
+        return;
+      }
+
+      const payload: {
+        type: string;
+        payload: Record<string, unknown>;
+        priority: number;
+        max_attempts: number;
+        run_at?: string;
+        cron_expression?: string;
+        job_count?: number;
+      } = {
+        type: jobForm.type,
+        payload: parsedPayload,
+        priority: Number(jobForm.priority),
+        max_attempts: Number(jobForm.maxAttempts),
+      };
+
+      if (jobForm.type === 'delayed' || jobForm.type === 'scheduled' || jobForm.type === 'recurring') {
+        payload.run_at = jobForm.runAt ? new Date(jobForm.runAt).toISOString() : new Date().toISOString();
+      }
+      if (jobForm.type === 'recurring') {
+        payload.cron_expression = jobForm.cronExpression;
+      }
+      if (jobForm.type === 'batch') {
+        payload.job_count = Number(jobForm.jobCount);
+      }
+
+      await createJob(selectedQueueId, payload);
+      await refreshJobs(selectedQueueId, 1, statusFilter);
+      await refreshMetrics();
+      await getQueueStats(selectedQueueId).then((data) => setQueueStats(data as QueueStatsSummary)).catch(() => setQueueStats(null));
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Job creation failed');
     }
   }
 
@@ -257,15 +355,27 @@ function App() {
               health={health}
               jobs={jobs}
               workers={workers}
+              organizations={organizations}
               projects={projects}
+              selectedOrgId={selectedOrgId}
               selectedProjectId={selectedProjectId}
               selectedQueueId={selectedQueueId}
+              orgName={orgName}
+              projectName={projectName}
               queueForm={queueForm}
+              jobForm={jobForm}
+              onOrgChange={setSelectedOrgId}
               onProjectChange={setSelectedProjectId}
               onQueueChange={handleSelectQueue}
+              onOrgNameChange={setOrgName}
+              onProjectNameChange={setProjectName}
               onQueueFormChange={(nextForm) => setQueueForm(nextForm)}
+              onJobFormChange={(nextForm) => setJobForm(nextForm)}
+              onCreateOrganization={handleCreateOrganization}
+              onCreateProject={handleCreateProject}
               onCreateQueue={handleCreateQueue}
-              onRefresh={() => { void refreshProjects(); void refreshWorkers(); void refreshMetrics(); void refreshHealth(); }}
+              onCreateJob={handleCreateJob}
+              onRefresh={() => { void refreshOrganizations(); void refreshProjects(); void refreshWorkers(); void refreshMetrics(); void refreshHealth(); }}
               refreshing={isLoading || jobsLoading}
               loading={isLoading}
               jobsLoading={jobsLoading}

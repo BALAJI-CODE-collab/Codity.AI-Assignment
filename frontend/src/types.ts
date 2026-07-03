@@ -16,6 +16,12 @@ export interface ProjectSummary {
   created_at: string;
 }
 
+export interface OrganizationSummary {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface QueueSummary {
   id: string;
   project_id: string;

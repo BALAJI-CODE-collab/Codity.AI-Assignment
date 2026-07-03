@@ -11,6 +11,7 @@ import {
   queueStats,
   readinessCheck,
 } from '../controllers/metricsController';
+import { registerWorker, heartbeat, claimJob } from '../controllers/workerController';
 import { authenticateToken } from '../middleware/auth';
 import { createOrganization } from '../services/organizationService';
 
@@ -45,5 +46,10 @@ router.get('/metrics', authenticateToken, metricsOverview);
 router.get('/queues/:id/stats', authenticateToken, queueStats);
 router.get('/workers', authenticateToken, listWorkers);
 router.get('/workers/:id', authenticateToken, getWorkerDetailsHandler);
+router.post('/workers/register', authenticateToken, registerWorker);
+router.post('/workers/heartbeat', authenticateToken, heartbeat);
+router.post('/workers/:id/heartbeat', authenticateToken, heartbeat);
+router.post('/workers/claim', authenticateToken, claimJob);
+router.post('/workers/:id/claim', authenticateToken, claimJob);
 
 export default router;

@@ -82,3 +82,9 @@ export const paginationSchema = z.object({
     project: z.string().uuid().optional()
   })
 });
+
+export const workerRegisterSchema = z.object({
+  body: z.object({
+    hostname: z.string().min(1)
+  })
+});

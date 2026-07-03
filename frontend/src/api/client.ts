@@ -1,6 +1,6 @@
-import type { ApiErrorShape, AuthSession, JobSummary, MetricsSummary, ProjectSummary, QueueStatsSummary, QueueSummary, WorkerSummary } from '../types';
+import type { ApiErrorShape, AuthSession, JobSummary, MetricsSummary, OrganizationSummary, ProjectSummary, QueueStatsSummary, QueueSummary, WorkerSummary } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 function getStoredSession(): AuthSession | null {
   const raw = window.localStorage.getItem('scheduler-session');
@@ -82,6 +82,24 @@ export async function listProjects() {
   return request<ProjectSummary[]>('/projects');
 }
 
+export async function listOrganizations() {
+  return request<OrganizationSummary[]>('/organizations');
+}
+
+export async function createOrganization(payload: { name: string }) {
+  return request<OrganizationSummary>('/organizations', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createProject(payload: { org_id: string; name: string }) {
+  return request<ProjectSummary>('/projects', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function listQueues(projectId?: string) {
   if (!projectId) {
     return [] as QueueSummary[];
@@ -115,6 +133,13 @@ export async function listJobs(queueId: string, page = 1, perPage = 20, status?:
 
 export async function getJob(jobId: string) {
   return request<JobSummary>(`/jobs/${jobId}`);
+}
+
+export async function createJob(queueId: string, payload: { type: string; payload?: Record<string, unknown>; priority?: number; run_at?: string; max_attempts?: number; cron_expression?: string; job_count?: number }) {
+  return request<JobSummary | JobSummary[]>(`/queues/${queueId}/jobs`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function retryJob(jobId: string) {

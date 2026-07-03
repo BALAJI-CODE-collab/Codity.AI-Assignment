@@ -1,6 +1,6 @@
 import os from 'os';
 import process from 'process';
-import { claimNextJob, createWorker, updateWorkerStatus } from '../repositories/jobRepository';
+import { claimNextJob, createWorker, recoverJobsForWorker, updateWorkerStatus } from '../repositories/jobRepository';
 import { executeJobLifecycle } from '../services/jobLifecycleService';
 import { heartbeatWorker, recoverDeadWorkers, runSchedulerTick } from '../services/reliabilityService';
 
@@ -49,7 +49,7 @@ async function pollForJobs(context: WorkerContext) {
     return;
   }
 
-  const candidates = [] as Array<{ id: string; queueId: string }>;
+  const candidates = [] as Array<{ id: string; queueId: string; payload: Record<string, unknown> }>;
   for (let index = 0; index < context.config.batchSize; index += 1) {
     if (context.isShuttingDown) {
       break;
@@ -66,11 +66,12 @@ async function pollForJobs(context: WorkerContext) {
       break;
     }
     context.inFlightJobsPerQueue.set(queueId, inFlight + 1);
-    candidates.push({ id: nextJob.id as string, queueId });
+    const payload = typeof nextJob.payload === 'string' ? JSON.parse(nextJob.payload) : nextJob.payload;
+    candidates.push({ id: nextJob.id as string, queueId, payload: (payload ?? {}) as Record<string, unknown> });
   }
 
   for (const candidate of candidates) {
-    const executionPromise = executeJob(context, candidate.id, candidate.queueId);
+    const executionPromise = executeJob(context, candidate.id, candidate.queueId, candidate.payload);
     context.runningPromises.add(executionPromise);
     void executionPromise.finally(() => {
       context.runningPromises.delete(executionPromise);
@@ -89,13 +90,13 @@ async function pollForJobs(context: WorkerContext) {
   }
 }
 
-async function executeJob(context: WorkerContext, jobId: string, queueId: string) {
+async function executeJob(context: WorkerContext, jobId: string, queueId: string, payload: Record<string, unknown>) {
   if (context.isShuttingDown) {
     return;
   }
 
   try {
-    await executeJobLifecycle(context.workerId, { id: jobId, queue_id: queueId, payload: {} });
+    await executeJobLifecycle(context.workerId, { id: jobId, queue_id: queueId, payload });
     console.log(`Worker ${os.hostname()} executed job ${jobId} on queue ${queueId}`);
   } catch (error) {
     console.error(`Job ${jobId} failed:`, error);
@@ -117,6 +118,9 @@ async function runHeartbeatLoop(context: WorkerContext) {
 async function runSchedulerLoop(context: WorkerContext) {
   while (!context.isShuttingDown) {
     await runSchedulerTick();
+    await recoverDeadWorkers(context.deadWorkerTimeoutMs, async (workerId) => {
+      await updateWorkerStatus(workerId, 'dead');
+    }, recoverJobsForWorker);
     if (context.isShuttingDown) {
       break;
     }

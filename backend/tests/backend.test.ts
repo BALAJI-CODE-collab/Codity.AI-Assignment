@@ -31,6 +31,19 @@ describe('backend integration tests', () => {
     expect(organizations).toHaveLength(1);
   });
 
+  it('registers users with the same display name without organization name collisions', async () => {
+    const unique = Date.now();
+    const first = await registerUser(`same-name-1-${unique}@example.com`, 'secret1234', 'Sam');
+    const second = await registerUser(`same-name-2-${unique}@example.com`, 'secret1234', 'Sam');
+
+    const firstOrganizations = await listUserOrganizations(first.user.id);
+    const secondOrganizations = await listUserOrganizations(second.user.id);
+
+    expect(firstOrganizations).toHaveLength(1);
+    expect(secondOrganizations).toHaveLength(1);
+    expect(firstOrganizations[0].name).not.toBe(secondOrganizations[0].name);
+  });
+
   it('creates and lists projects and queues for an organization member', async () => {
     const registered = await registerUser(`projects-${Date.now()}@example.com`, 'secret1234', 'Grace');
     const organizations = await listUserOrganizations(registered.user.id);
@@ -118,6 +131,23 @@ describe('backend integration tests', () => {
 
     const claimed = await claimNextJob(worker.id);
     expect(claimed).toBeNull();
+  });
+
+  it('claims jobs with their original payload for worker execution', async () => {
+    const registered = await registerUser(`payload-${Date.now()}@example.com`, 'secret1234', 'Frances');
+    const organizations = await listUserOrganizations(registered.user.id);
+    const orgId = organizations[0].id;
+    const project = await createProjectForOrg(registered.user.id, orgId, 'Payload');
+    const queue = await createQueueForProject(registered.user.id, project.id, 'payload', 10, 1, null, false);
+    const worker = await createWorker('payload-worker');
+
+    await createJobForQueue(registered.user.id, queue.id, {
+      type: 'immediate',
+      payload: { forceFailure: true, task: 'verify-payload' },
+    });
+
+    const claimed = await claimNextJob(worker.id);
+    expect(claimed?.payload).toMatchObject({ forceFailure: true, task: 'verify-payload' });
   });
 
   it('records successful job executions with the execution succeeded status', async () => {
